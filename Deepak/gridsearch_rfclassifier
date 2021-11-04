@@ -1,0 +1,1368 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from scipy.stats import randint\n",
+    "from sklearn.tree import DecisionTreeClassifier\n",
+    "from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier\n",
+    "from sklearn import preprocessing\n",
+    "from sklearn.model_selection import train_test_split, StratifiedShuffleSplit, GridSearchCV, RandomizedSearchCV\n",
+    "from sklearn.metrics import matthews_corrcoef\n",
+    "from xgboost import XGBClassifier\n",
+    "import lightgbm\n",
+    "from lightgbm import LGBMClassifier\n",
+    "import os\n",
+    "%matplotlib inline\n",
+    "import matplotlib.pyplot as plt\n",
+    "np.random.seed(42)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "VALIDATION = True\n",
+    "DATASET = 2\n",
+    "\n",
+    "train_1= pd.read_csv(os.path.join(os.getcwd(),f\"Dataset_1_Training.csv\"),index_col=0)\n",
+    "test_1 = pd.read_csv(os.path.join(os.getcwd(),f\"Dataset_1_Testing.csv\"),index_col=0)\n",
+    "\n",
+    "train_2 = pd.read_csv(os.path.join(os.getcwd(),f\"Dataset_2_Training.csv\"),index_col=0)\n",
+    "test_2 = pd.read_csv(os.path.join(os.getcwd(),f\"Dataset_2_Testing.csv\"),index_col=0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th>ID_REF</th>\n",
+       "      <th>gene_1</th>\n",
+       "      <th>gene_2</th>\n",
+       "      <th>gene_3</th>\n",
+       "      <th>gene_4</th>\n",
+       "      <th>gene_5</th>\n",
+       "      <th>gene_6</th>\n",
+       "      <th>gene_7</th>\n",
+       "      <th>gene_8</th>\n",
+       "      <th>gene_9</th>\n",
+       "      <th>gene_10</th>\n",
+       "      <th>...</th>\n",
+       "      <th>gene_22276</th>\n",
+       "      <th>gene_22277</th>\n",
+       "      <th>gene_22278</th>\n",
+       "      <th>gene_22279</th>\n",
+       "      <th>gene_22280</th>\n",
+       "      <th>gene_22281</th>\n",
+       "      <th>gene_22282</th>\n",
+       "      <th>gene_22283</th>\n",
+       "      <th>CO: 1</th>\n",
+       "      <th>CO: 2</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>Train_01</th>\n",
+       "      <td>12.4440</td>\n",
+       "      <td>8.3774</td>\n",
+       "      <td>6.7866</td>\n",
+       "      <td>10.2851</td>\n",
+       "      <td>5.9064</td>\n",
+       "      <td>8.3767</td>\n",
+       "      <td>8.0356</td>\n",
+       "      <td>6.6745</td>\n",
+       "      <td>6.2325</td>\n",
+       "      <td>6.8450</td>\n",
+       "      <td>...</td>\n",
+       "      <td>15.6236</td>\n",
+       "      <td>15.2785</td>\n",
+       "      <td>3.2915</td>\n",
+       "      <td>3.6526</td>\n",
+       "      <td>2.6412</td>\n",
+       "      <td>1.2652</td>\n",
+       "      <td>3.0690</td>\n",
+       "      <td>2.0271</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_02</th>\n",
+       "      <td>12.2005</td>\n",
+       "      <td>7.8592</td>\n",
+       "      <td>8.0963</td>\n",
+       "      <td>10.4624</td>\n",
+       "      <td>4.9582</td>\n",
+       "      <td>9.2973</td>\n",
+       "      <td>7.0581</td>\n",
+       "      <td>6.4607</td>\n",
+       "      <td>6.9047</td>\n",
+       "      <td>5.8878</td>\n",
+       "      <td>...</td>\n",
+       "      <td>15.3234</td>\n",
+       "      <td>15.1286</td>\n",
+       "      <td>3.3811</td>\n",
+       "      <td>2.5880</td>\n",
+       "      <td>4.4798</td>\n",
+       "      <td>4.8098</td>\n",
+       "      <td>3.1637</td>\n",
+       "      <td>2.4758</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_03</th>\n",
+       "      <td>12.6709</td>\n",
+       "      <td>8.6762</td>\n",
+       "      <td>7.4812</td>\n",
+       "      <td>10.1887</td>\n",
+       "      <td>5.2332</td>\n",
+       "      <td>9.1721</td>\n",
+       "      <td>8.6061</td>\n",
+       "      <td>7.0932</td>\n",
+       "      <td>6.5940</td>\n",
+       "      <td>5.6843</td>\n",
+       "      <td>...</td>\n",
+       "      <td>15.4604</td>\n",
+       "      <td>15.2674</td>\n",
+       "      <td>3.1665</td>\n",
+       "      <td>3.9743</td>\n",
+       "      <td>5.2597</td>\n",
+       "      <td>4.3815</td>\n",
+       "      <td>2.8034</td>\n",
+       "      <td>2.4669</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_04</th>\n",
+       "      <td>11.6619</td>\n",
+       "      <td>8.2557</td>\n",
+       "      <td>7.9923</td>\n",
+       "      <td>10.7705</td>\n",
+       "      <td>6.3296</td>\n",
+       "      <td>9.3777</td>\n",
+       "      <td>8.4776</td>\n",
+       "      <td>6.5878</td>\n",
+       "      <td>6.0877</td>\n",
+       "      <td>6.5169</td>\n",
+       "      <td>...</td>\n",
+       "      <td>15.5185</td>\n",
+       "      <td>15.1655</td>\n",
+       "      <td>4.0045</td>\n",
+       "      <td>3.8503</td>\n",
+       "      <td>5.9114</td>\n",
+       "      <td>0.7882</td>\n",
+       "      <td>3.1831</td>\n",
+       "      <td>3.4820</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_05</th>\n",
+       "      <td>11.8397</td>\n",
+       "      <td>8.7971</td>\n",
+       "      <td>7.8321</td>\n",
+       "      <td>10.2869</td>\n",
+       "      <td>5.8389</td>\n",
+       "      <td>7.0841</td>\n",
+       "      <td>7.3419</td>\n",
+       "      <td>7.3167</td>\n",
+       "      <td>6.3456</td>\n",
+       "      <td>6.1708</td>\n",
+       "      <td>...</td>\n",
+       "      <td>15.3143</td>\n",
+       "      <td>14.9506</td>\n",
+       "      <td>3.0514</td>\n",
+       "      <td>3.2946</td>\n",
+       "      <td>5.1537</td>\n",
+       "      <td>3.9179</td>\n",
+       "      <td>3.1881</td>\n",
+       "      <td>2.9769</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 22285 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "ID_REF     gene_1  gene_2  gene_3   gene_4  gene_5  gene_6  gene_7  gene_8  \\\n",
+       "Train_01  12.4440  8.3774  6.7866  10.2851  5.9064  8.3767  8.0356  6.6745   \n",
+       "Train_02  12.2005  7.8592  8.0963  10.4624  4.9582  9.2973  7.0581  6.4607   \n",
+       "Train_03  12.6709  8.6762  7.4812  10.1887  5.2332  9.1721  8.6061  7.0932   \n",
+       "Train_04  11.6619  8.2557  7.9923  10.7705  6.3296  9.3777  8.4776  6.5878   \n",
+       "Train_05  11.8397  8.7971  7.8321  10.2869  5.8389  7.0841  7.3419  7.3167   \n",
+       "\n",
+       "ID_REF    gene_9  gene_10  ...  gene_22276  gene_22277  gene_22278  \\\n",
+       "Train_01  6.2325   6.8450  ...     15.6236     15.2785      3.2915   \n",
+       "Train_02  6.9047   5.8878  ...     15.3234     15.1286      3.3811   \n",
+       "Train_03  6.5940   5.6843  ...     15.4604     15.2674      3.1665   \n",
+       "Train_04  6.0877   6.5169  ...     15.5185     15.1655      4.0045   \n",
+       "Train_05  6.3456   6.1708  ...     15.3143     14.9506      3.0514   \n",
+       "\n",
+       "ID_REF    gene_22279  gene_22280  gene_22281  gene_22282  gene_22283  CO: 1  \\\n",
+       "Train_01      3.6526      2.6412      1.2652      3.0690      2.0271    0.0   \n",
+       "Train_02      2.5880      4.4798      4.8098      3.1637      2.4758    0.0   \n",
+       "Train_03      3.9743      5.2597      4.3815      2.8034      2.4669    0.0   \n",
+       "Train_04      3.8503      5.9114      0.7882      3.1831      3.4820    0.0   \n",
+       "Train_05      3.2946      5.1537      3.9179      3.1881      2.9769    0.0   \n",
+       "\n",
+       "ID_REF    CO: 2  \n",
+       "Train_01    1.0  \n",
+       "Train_02    1.0  \n",
+       "Train_03    0.0  \n",
+       "Train_04    0.0  \n",
+       "Train_05    0.0  \n",
+       "\n",
+       "[5 rows x 22285 columns]"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_1.T.head() "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th>ID_REF</th>\n",
+       "      <th>gene_1</th>\n",
+       "      <th>gene_2</th>\n",
+       "      <th>gene_3</th>\n",
+       "      <th>gene_4</th>\n",
+       "      <th>gene_5</th>\n",
+       "      <th>gene_6</th>\n",
+       "      <th>gene_7</th>\n",
+       "      <th>gene_8</th>\n",
+       "      <th>gene_9</th>\n",
+       "      <th>gene_10</th>\n",
+       "      <th>...</th>\n",
+       "      <th>gene_54670</th>\n",
+       "      <th>gene_54671</th>\n",
+       "      <th>gene_54672</th>\n",
+       "      <th>gene_54673</th>\n",
+       "      <th>gene_54674</th>\n",
+       "      <th>gene_54675</th>\n",
+       "      <th>CO: 3</th>\n",
+       "      <th>CO: 4</th>\n",
+       "      <th>CO: 5</th>\n",
+       "      <th>CO: 6</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>Train_001</th>\n",
+       "      <td>8.2843</td>\n",
+       "      <td>8.7174</td>\n",
+       "      <td>8.3019</td>\n",
+       "      <td>11.8611</td>\n",
+       "      <td>4.6883</td>\n",
+       "      <td>9.8524</td>\n",
+       "      <td>8.2301</td>\n",
+       "      <td>4.8406</td>\n",
+       "      <td>7.5667</td>\n",
+       "      <td>8.4165</td>\n",
+       "      <td>...</td>\n",
+       "      <td>6.3546</td>\n",
+       "      <td>7.2572</td>\n",
+       "      <td>3.6080</td>\n",
+       "      <td>3.9483</td>\n",
+       "      <td>4.5200</td>\n",
+       "      <td>4.5195</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>1.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_002</th>\n",
+       "      <td>9.0419</td>\n",
+       "      <td>8.8729</td>\n",
+       "      <td>8.4559</td>\n",
+       "      <td>11.2112</td>\n",
+       "      <td>5.7059</td>\n",
+       "      <td>10.2263</td>\n",
+       "      <td>7.9439</td>\n",
+       "      <td>4.6463</td>\n",
+       "      <td>6.1828</td>\n",
+       "      <td>7.0852</td>\n",
+       "      <td>...</td>\n",
+       "      <td>4.9707</td>\n",
+       "      <td>6.4847</td>\n",
+       "      <td>5.1648</td>\n",
+       "      <td>1.8369</td>\n",
+       "      <td>3.8223</td>\n",
+       "      <td>3.4288</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>1.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_003</th>\n",
+       "      <td>7.6171</td>\n",
+       "      <td>8.3904</td>\n",
+       "      <td>8.1184</td>\n",
+       "      <td>11.0341</td>\n",
+       "      <td>5.8050</td>\n",
+       "      <td>9.5912</td>\n",
+       "      <td>6.8044</td>\n",
+       "      <td>4.0878</td>\n",
+       "      <td>8.1184</td>\n",
+       "      <td>7.3179</td>\n",
+       "      <td>...</td>\n",
+       "      <td>3.9571</td>\n",
+       "      <td>6.2647</td>\n",
+       "      <td>3.4216</td>\n",
+       "      <td>4.7911</td>\n",
+       "      <td>5.4910</td>\n",
+       "      <td>3.8438</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_004</th>\n",
+       "      <td>9.6283</td>\n",
+       "      <td>8.3840</td>\n",
+       "      <td>9.9061</td>\n",
+       "      <td>12.0571</td>\n",
+       "      <td>5.1193</td>\n",
+       "      <td>10.5774</td>\n",
+       "      <td>8.1628</td>\n",
+       "      <td>5.3257</td>\n",
+       "      <td>5.6398</td>\n",
+       "      <td>7.6829</td>\n",
+       "      <td>...</td>\n",
+       "      <td>4.6561</td>\n",
+       "      <td>7.5776</td>\n",
+       "      <td>6.2385</td>\n",
+       "      <td>4.1413</td>\n",
+       "      <td>5.3047</td>\n",
+       "      <td>5.4693</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_005</th>\n",
+       "      <td>10.1735</td>\n",
+       "      <td>9.1585</td>\n",
+       "      <td>7.9649</td>\n",
+       "      <td>11.0843</td>\n",
+       "      <td>5.0119</td>\n",
+       "      <td>8.7764</td>\n",
+       "      <td>8.1379</td>\n",
+       "      <td>3.6227</td>\n",
+       "      <td>7.7334</td>\n",
+       "      <td>7.6336</td>\n",
+       "      <td>...</td>\n",
+       "      <td>3.7007</td>\n",
+       "      <td>3.8720</td>\n",
+       "      <td>3.1052</td>\n",
+       "      <td>5.4053</td>\n",
+       "      <td>5.3599</td>\n",
+       "      <td>2.8328</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 54679 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "ID_REF      gene_1  gene_2  gene_3   gene_4  gene_5   gene_6  gene_7  gene_8  \\\n",
+       "Train_001   8.2843  8.7174  8.3019  11.8611  4.6883   9.8524  8.2301  4.8406   \n",
+       "Train_002   9.0419  8.8729  8.4559  11.2112  5.7059  10.2263  7.9439  4.6463   \n",
+       "Train_003   7.6171  8.3904  8.1184  11.0341  5.8050   9.5912  6.8044  4.0878   \n",
+       "Train_004   9.6283  8.3840  9.9061  12.0571  5.1193  10.5774  8.1628  5.3257   \n",
+       "Train_005  10.1735  9.1585  7.9649  11.0843  5.0119   8.7764  8.1379  3.6227   \n",
+       "\n",
+       "ID_REF     gene_9  gene_10  ...  gene_54670  gene_54671  gene_54672  \\\n",
+       "Train_001  7.5667   8.4165  ...      6.3546      7.2572      3.6080   \n",
+       "Train_002  6.1828   7.0852  ...      4.9707      6.4847      5.1648   \n",
+       "Train_003  8.1184   7.3179  ...      3.9571      6.2647      3.4216   \n",
+       "Train_004  5.6398   7.6829  ...      4.6561      7.5776      6.2385   \n",
+       "Train_005  7.7334   7.6336  ...      3.7007      3.8720      3.1052   \n",
+       "\n",
+       "ID_REF     gene_54673  gene_54674  gene_54675  CO: 3  CO: 4  CO: 5  CO: 6  \n",
+       "Train_001      3.9483      4.5200      4.5195    0.0    0.0    1.0    1.0  \n",
+       "Train_002      1.8369      3.8223      3.4288    0.0    0.0    1.0    1.0  \n",
+       "Train_003      4.7911      5.4910      3.8438    0.0    0.0    0.0    1.0  \n",
+       "Train_004      4.1413      5.3047      5.4693    0.0    0.0    0.0    1.0  \n",
+       "Train_005      5.4053      5.3599      2.8328    0.0    0.0    0.0    1.0  \n",
+       "\n",
+       "[5 rows x 54679 columns]"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_2.T.head() "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['CO: 1', 'CO: 2']"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "list(train_1.T.columns[-2:])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['CO: 3', 'CO: 4', 'CO: 5', 'CO: 6']"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "list(train_2.T.columns[-4:])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(130, 22285)"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_1.T.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(340, 54679)"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_2.T.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(100, 22283)"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "test_1.T.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(214, 54675)"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "test_2.T.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "train_1 = train_1.T\n",
+    "test_1 = test_1.T\n",
+    "train_2= train_2.T\n",
+    "test_2 = test_2.T"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th>ID_REF</th>\n",
+       "      <th>gene_2</th>\n",
+       "      <th>gene_3</th>\n",
+       "      <th>gene_4</th>\n",
+       "      <th>gene_5</th>\n",
+       "      <th>gene_6</th>\n",
+       "      <th>gene_7</th>\n",
+       "      <th>gene_8</th>\n",
+       "      <th>gene_9</th>\n",
+       "      <th>gene_10</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>Train_01</th>\n",
+       "      <td>8.3774</td>\n",
+       "      <td>6.7866</td>\n",
+       "      <td>10.2851</td>\n",
+       "      <td>5.9064</td>\n",
+       "      <td>8.3767</td>\n",
+       "      <td>8.0356</td>\n",
+       "      <td>6.6745</td>\n",
+       "      <td>6.2325</td>\n",
+       "      <td>6.8450</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_02</th>\n",
+       "      <td>7.8592</td>\n",
+       "      <td>8.0963</td>\n",
+       "      <td>10.4624</td>\n",
+       "      <td>4.9582</td>\n",
+       "      <td>9.2973</td>\n",
+       "      <td>7.0581</td>\n",
+       "      <td>6.4607</td>\n",
+       "      <td>6.9047</td>\n",
+       "      <td>5.8878</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_03</th>\n",
+       "      <td>8.6762</td>\n",
+       "      <td>7.4812</td>\n",
+       "      <td>10.1887</td>\n",
+       "      <td>5.2332</td>\n",
+       "      <td>9.1721</td>\n",
+       "      <td>8.6061</td>\n",
+       "      <td>7.0932</td>\n",
+       "      <td>6.5940</td>\n",
+       "      <td>5.6843</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_04</th>\n",
+       "      <td>8.2557</td>\n",
+       "      <td>7.9923</td>\n",
+       "      <td>10.7705</td>\n",
+       "      <td>6.3296</td>\n",
+       "      <td>9.3777</td>\n",
+       "      <td>8.4776</td>\n",
+       "      <td>6.5878</td>\n",
+       "      <td>6.0877</td>\n",
+       "      <td>6.5169</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_05</th>\n",
+       "      <td>8.7971</td>\n",
+       "      <td>7.8321</td>\n",
+       "      <td>10.2869</td>\n",
+       "      <td>5.8389</td>\n",
+       "      <td>7.0841</td>\n",
+       "      <td>7.3419</td>\n",
+       "      <td>7.3167</td>\n",
+       "      <td>6.3456</td>\n",
+       "      <td>6.1708</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_126</th>\n",
+       "      <td>8.0073</td>\n",
+       "      <td>7.1604</td>\n",
+       "      <td>9.3056</td>\n",
+       "      <td>2.7648</td>\n",
+       "      <td>9.0741</td>\n",
+       "      <td>5.9092</td>\n",
+       "      <td>5.2527</td>\n",
+       "      <td>5.7626</td>\n",
+       "      <td>3.1870</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_127</th>\n",
+       "      <td>8.7849</td>\n",
+       "      <td>8.1964</td>\n",
+       "      <td>8.5677</td>\n",
+       "      <td>3.2988</td>\n",
+       "      <td>9.7455</td>\n",
+       "      <td>6.6631</td>\n",
+       "      <td>3.9661</td>\n",
+       "      <td>7.8396</td>\n",
+       "      <td>6.5435</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_128</th>\n",
+       "      <td>8.6856</td>\n",
+       "      <td>6.9133</td>\n",
+       "      <td>9.7126</td>\n",
+       "      <td>6.4256</td>\n",
+       "      <td>9.6322</td>\n",
+       "      <td>7.1716</td>\n",
+       "      <td>3.9828</td>\n",
+       "      <td>7.1508</td>\n",
+       "      <td>6.2048</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_129</th>\n",
+       "      <td>8.6771</td>\n",
+       "      <td>4.9542</td>\n",
+       "      <td>9.6943</td>\n",
+       "      <td>4.0177</td>\n",
+       "      <td>9.4154</td>\n",
+       "      <td>8.1591</td>\n",
+       "      <td>6.9346</td>\n",
+       "      <td>8.3595</td>\n",
+       "      <td>6.4817</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Train_130</th>\n",
+       "      <td>7.5860</td>\n",
+       "      <td>6.6064</td>\n",
+       "      <td>9.2455</td>\n",
+       "      <td>6.5469</td>\n",
+       "      <td>8.9235</td>\n",
+       "      <td>7.4870</td>\n",
+       "      <td>2.7905</td>\n",
+       "      <td>9.6112</td>\n",
+       "      <td>6.3782</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>130 rows × 9 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "ID_REF     gene_2  gene_3   gene_4  gene_5  gene_6  gene_7  gene_8  gene_9  \\\n",
+       "Train_01   8.3774  6.7866  10.2851  5.9064  8.3767  8.0356  6.6745  6.2325   \n",
+       "Train_02   7.8592  8.0963  10.4624  4.9582  9.2973  7.0581  6.4607  6.9047   \n",
+       "Train_03   8.6762  7.4812  10.1887  5.2332  9.1721  8.6061  7.0932  6.5940   \n",
+       "Train_04   8.2557  7.9923  10.7705  6.3296  9.3777  8.4776  6.5878  6.0877   \n",
+       "Train_05   8.7971  7.8321  10.2869  5.8389  7.0841  7.3419  7.3167  6.3456   \n",
+       "...           ...     ...      ...     ...     ...     ...     ...     ...   \n",
+       "Train_126  8.0073  7.1604   9.3056  2.7648  9.0741  5.9092  5.2527  5.7626   \n",
+       "Train_127  8.7849  8.1964   8.5677  3.2988  9.7455  6.6631  3.9661  7.8396   \n",
+       "Train_128  8.6856  6.9133   9.7126  6.4256  9.6322  7.1716  3.9828  7.1508   \n",
+       "Train_129  8.6771  4.9542   9.6943  4.0177  9.4154  8.1591  6.9346  8.3595   \n",
+       "Train_130  7.5860  6.6064   9.2455  6.5469  8.9235  7.4870  2.7905  9.6112   \n",
+       "\n",
+       "ID_REF     gene_10  \n",
+       "Train_01    6.8450  \n",
+       "Train_02    5.8878  \n",
+       "Train_03    5.6843  \n",
+       "Train_04    6.5169  \n",
+       "Train_05    6.1708  \n",
+       "...            ...  \n",
+       "Train_126   3.1870  \n",
+       "Train_127   6.5435  \n",
+       "Train_128   6.2048  \n",
+       "Train_129   6.4817  \n",
+       "Train_130   6.3782  \n",
+       "\n",
+       "[130 rows x 9 columns]"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_small = train_1.iloc[:,1:10]\n",
+    "train_small"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 720x720 with 9 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "train_small.hist(bins = 50, figsize = (10,10))\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "test_cols_1 = ['CO: 1','CO: 2']\n",
+    "test_cols_2 = ['CO: 3','CO: 4','CO: 5','CO: 6']\n",
+    "test_cols = ['CO: 1','CO: 2','CO: 3','CO: 4','CO: 5','CO: 6']\n",
+    "scaler = preprocessing.StandardScaler()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "StandardScaler()"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_1 = train_1.drop(test_cols_1, axis=1, errors='ignore')\n",
+    "y_1 = train_1[test_cols_1]\n",
+    "X_test_1 = test_1.drop(test_cols_1, axis=1, errors='ignore')\n",
+    "scaler.fit(X_1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(130, 22283)"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "scaledX_1 = scaler.transform(X_1)\n",
+    "scaledXtest_1 = scaler.transform(X_test_1)\n",
+    "scaledX_1.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "StandardScaler()"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_2 = train_2.drop(test_cols_2, axis=1, errors='ignore')\n",
+    "y_2 = train_2[test_cols_2]\n",
+    "X_test_2 = test_2.drop(test_cols_2, axis=1, errors='ignore')\n",
+    "scaler.fit(X_2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(340, 54675)"
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "scaledX_2 = scaler.transform(X_2)\n",
+    "scaledXtest_2 = scaler.transform(X_test_2)\n",
+    "scaledX_2.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X_1 = scaledX_1\n",
+    "X_test_1 = scaledXtest_1\n",
+    "X_2 = scaledX_2\n",
+    "X_test_2 = scaledXtest_2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "((91, 22283), (39, 22283))"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train_1, X_val_1, y_train_1, y_val_1 = train_test_split(X_1, y_1, stratify=y_1, test_size = 0.3, random_state = 42)\n",
+    "X_train_1.shape, X_val_1.shape\n",
+    "#y_train.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "((238, 54675), (102, 54675))"
+      ]
+     },
+     "execution_count": 21,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train_2, X_val_2, y_train_2, y_val_2 = train_test_split(X_2, y_2, stratify=y_2, test_size = 0.3, random_state = 42)\n",
+    "X_train_2.shape, X_val_2.shape\n",
+    "#y_train.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([1., 0., 1., 0., 0., 0., 0., 1., 1., 0., 1., 0., 0., 0., 0., 0., 0.,\n",
+       "       0., 0., 0., 0., 0., 1., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.,\n",
+       "       1., 1., 1., 0., 1., 0., 1., 0., 0., 0., 1., 0., 0., 1., 1., 1., 0.,\n",
+       "       0., 0., 0., 0., 0., 0., 1., 0., 0., 1., 0., 0., 0., 0., 0., 1., 0.,\n",
+       "       0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0.,\n",
+       "       1., 0., 0., 0., 0., 0.])"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "np.array(y_train_1[test_cols[0]])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(91, 2)"
+      ]
+     },
+     "execution_count": 23,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "np.shape(y_train_1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#for i in range(len(test_cols)):\n",
+    "    #print(np.array(y_train[test_cols[i]]))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# model = RandomForestClassifier(n_estimators=1000, n_jobs=-1, random_state=0)\n",
+    "\n",
+    "# model.fit(scaledX,y)\n",
+    "# predictions = model.predict(scaledXtest)\n",
+    "# model.score(scaledXtest,ytest)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def get_model():\n",
+    "    model = RandomForestClassifier()\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CO: 1 0.7435897435897436\n",
+      "CO: 2 0.6410256410256411\n",
+      "CO: 3 0.7843137254901961\n",
+      "CO: 4 0.8529411764705882\n",
+      "CO: 5 0.803921568627451\n",
+      "CO: 6 0.5686274509803921\n"
+     ]
+    }
+   ],
+   "source": [
+    "predictions = []\n",
+    "ypred = []\n",
+    "yval  = []\n",
+    "param = {'n_estimators':[100,200,300,400,500,600,700,800,900,1000],'max_depth':[1,5,10,15,20]}\n",
+    "for i in range(len(test_cols)):\n",
+    "    if i <= 1:\n",
+    "        y_train_11 = np.array(y_train_1[test_cols[i]])\n",
+    "        y_val_11 = np.array(y_val_1[test_cols[i]])\n",
+    "        y_train_11 = y_train_11.reshape(y_train_11.shape[0],)\n",
+    "        y_val_11 = y_val_11.reshape(y_val_11.shape[0],)\n",
+    "        rf1 = get_model()\n",
+    "        model_1 = GridSearchCV(rf1,param)\n",
+    "        #model_1 = XGBClassifier(max_depth = 5, learning_rate = 0.01, eval_metric = 'mlogloss', n_estimators = 75, use_label_encoder=False)\n",
+    "        #param_1 = [{'max_depth':[10,20,30],'learning_rate':[0.05,0.1,0.15],'n_estimators':[50,100,200]}]\n",
+    "        #model_1 = GridSearchCV(xgb1,param_1,cv=5,scoring=\"neg_mean_squared_error\",return_train_score = True)\n",
+    "        \n",
+    "        model_1.fit(X_train_1,y_train_11)\n",
+    "        predictions.extend(model_1.predict(X_val_1))\n",
+    "        print(test_cols[i],model_1.score(X_val_1,y_val_11))\n",
+    "        ypred.extend(model_1.predict(X_test_1))\n",
+    "        yval.extend(y_val_11)\n",
+    "    \n",
+    "    if i > 1:\n",
+    "        y_train_12 = np.array(y_train_2[test_cols[i]])\n",
+    "        y_val_12 = np.array(y_val_2[test_cols[i]])\n",
+    "        y_train_12 = y_train_12.reshape(y_train_12.shape[0],)\n",
+    "        y_val_12 = y_val_12.reshape(y_val_12.shape[0],)\n",
+    "        rf2 = get_model()\n",
+    "        model_2 = GridSearchCV(rf2,param)\n",
+    "        #model_2 = LGBMClassifier(max_depth=20,n_estimators=1000,lambda_l2=2,bagging_fraction=0.75,feature_fraction=0.6)\n",
+    "        #model_2 = XGBClassifier(max_depth = 5, learning_rate = 0.01, eval_metric = 'mlogloss', n_estimators = 75, use_label_encoder=False)\n",
+    "        #param_2 = [{'max_depth':[10,20,30],'learning_rate':[0.05,0.1,0.15],'n_estimators':[50,100,200]}]\n",
+    "        #model_2 = GridSearchCV(XGBClassifier(eval_metric='mlogloss'),param_2,cv=5,scoring=\"neg_mean_squared_error\",return_train_score = True)\n",
+    "        \n",
+    "        model_2.fit(X_train_2,y_train_12)\n",
+    "        predictions.extend(model_2.predict(X_val_2))\n",
+    "        print(test_cols[i],model_2.score(X_val_2,y_val_12))\n",
+    "        ypred.extend(model_2.predict(X_test_2))\n",
+    "        yval.extend(y_val_12)\n",
+    "    \n",
+    "    #X_test = test.drop(test_cols, axis=1, errors='ignore')\n",
+    "    #scaledX = scaler.transform(X)\n",
+    "    #scaledXtest = scaler.transform(Xtest)  \n",
+    "    #estimator = RandomForestClassifier(n_estimators=100, n_jobs=-1, random_state=42)\n",
+    "\n",
+    "\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#for i in range(len(test_cols)):\n",
+    "#    if i<=1:\n",
+    "#        print(f\"CO: {i+1} -\",matthews_corrcoef(y_val_1[f'CO: {i+1}'],predictions[i]))\n",
+    "#    else:\n",
+    "#        print(f\"CO: {i+1} -\",matthews_corrcoef(y_val_2[f'CO: {i+1}'],predictions[i]))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ypred = np.array(ypred)\n",
+    "yval = np.array(yval)\n",
+    "predictions = np.array(predictions)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(1056,)"
+      ]
+     },
+     "execution_count": 48,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ypred.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ypred1 = pd.DataFrame(ypred)\n",
+    "yval1 = pd.DataFrame(yval)\n",
+    "predictions1 = pd.DataFrame(predictions)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(486, 1)"
+      ]
+     },
+     "execution_count": 50,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "yval1.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.4156137542982287"
+      ]
+     },
+     "execution_count": 51,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "matthews_corrcoef(yval1,predictions1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 54,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "RandomForestClassifier(max_depth=15, n_estimators=700)"
+      ]
+     },
+     "execution_count": 54,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model_1.best_estimator_"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 55,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "RandomForestClassifier(max_depth=15, n_estimators=200)"
+      ]
+     },
+     "execution_count": 55,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model_2.best_estimator_"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "submission = pd.DataFrame(ypred,columns=['Predicted'])\n",
+    "submission.index.name = 'Id'\n",
+    "#submission = pd.read_csv('dummy_submission.csv')\n",
+    "submission.Predicted = np.array(ypred,dtype=int)\n",
+    "submission.to_csv('RF(0.511).csv',index=True)\n",
+    "print(submission.shape)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "submission"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
